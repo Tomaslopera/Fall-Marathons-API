@@ -1,6 +1,5 @@
 import requests
 
-# Endpoint base
 BASE_URL = "http://127.0.0.1:8000"
 
 # Prueba 1: Agregar una maratón con datos válidos
@@ -11,12 +10,12 @@ response = requests.post(f"{BASE_URL}/add_marathon", json={
     "Name": "John Doe",
     "Gender": "M",
     "Age": 30,
-    "Finish": "2:30:45",
+    "Finish": 13657,
     "Age_Bracket": "30-34"
 })
 print("Respuesta:", response.json())
 
-# Prueba 2: Agregar una maratón con datos incompletos (debe fallar)
+# Prueba 2: Agregar una maratón con datos erroneos (debe fallar)
 print("Prueba 2: Agregar una maratón con datos incompletos")
 response = requests.post(f"{BASE_URL}/add_marathon", json={
     "Race": "",
@@ -24,7 +23,7 @@ response = requests.post(f"{BASE_URL}/add_marathon", json={
     "Name": "Jane Doe",
     "Gender": "F",
     "Age": 25,
-    "Finish": "3:15:00",
+    "Finish": "03:27:33",
     "Age_Bracket": "25-29"
 })
 print("Respuesta:", response.json())
