@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Psa12345
+      MYSQL_DATABASE: Marathons
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - marathon_network
+
+  api:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: mysql+pymysql://root:Psa12345@db/Marathons
+    networks:
+      - marathon_network
+
+volumes:
+  db_data:
+
+networks:
+  marathon_network:
+    driver: bridge
