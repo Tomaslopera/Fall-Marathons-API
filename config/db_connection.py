@@ -1,7 +1,9 @@
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine("mysql+pymysql://root:root@localhost:3306/2010_2019_FallMarathons", echo=True)
+DATABASE_URL="mysql+pymysql://root:Psa12345@db:3306/Marathons"
+engine = create_engine(DATABASE_URL, connect_args={"charset": "utf8mb4"})
+
 
 meta = MetaData()
 

@@ -1,0 +1,13 @@
+[Unit]
+Description=Fall Marathons API Docker Service
+After=network.target
+
+[Service]
+User=pedrosierra
+WorkingDirectory=/mnt/c/Users/USUARIO/Documents/VsWorkspace/SistemasOp/Fall_Marathons_API
+ExecStart=/usr/bin/docker-compose up --build
+ExecStop=/usr/bin/docker-compose down
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
