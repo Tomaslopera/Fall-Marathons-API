@@ -3,6 +3,8 @@ from config.db_connection import conn, session
 from schemas.models import Marathon
 from sqlalchemy import select, text
 from typing import List
+import os
+import json
 
 marathon = APIRouter()
 
@@ -37,28 +39,55 @@ def get_marathon(race: str, offset: int = 0, limit: int = Query(100, le=100)):
 def add_marathon_result(m: Marathon):
     try:
         count_before = session.execute(text("SELECT COUNT(*) FROM marathonsdata")).scalar()
-        
+
+        # Inserta el nuevo resultado en la base de datos
         consulta = text("INSERT INTO marathonsdata VALUES (:Race, :Year, :Name, :Gender, :Age, :Finish, :Age_Bracket)")
-        valores = {"Race" : m.Race, "Year" : m.Year, "Name" : m.Name, "Gender" : m.Gender, "Age" : m.Age, "Finish" : m.Finish, "Age_Bracket" : m.Age_Bracket}
+        valores = {
+            "Race": m.Race,
+            "Year": m.Year,
+            "Name": m.Name,
+            "Gender": m.Gender,
+            "Age": m.Age,
+            "Finish": m.Finish,
+            "Age_Bracket": m.Age_Bracket
+        }
         session.execute(consulta, valores)
         session.commit()
-        
+
         count_after = session.execute(text("SELECT COUNT(*) FROM marathonsdata")).scalar()
-        
-        consulta = text("SELECT * FROM marathonsdata WHERE Race = :Race AND Name = :Name AND Year = :Year ORDER BY Year DESC LIMIT 1")
+
+        consulta = text(
+            "SELECT * FROM marathonsdata WHERE Race = :Race AND Name = :Name AND Year = :Year ORDER BY Year DESC LIMIT 1"
+        )
         nuevo_maraton = session.execute(consulta, {"Race": m.Race, "Name": m.Name, "Year": m.Year}).first()
 
         if not nuevo_maraton:
             raise HTTPException(status_code=404, detail="Marathon not found")
 
+        # Se crea una carpeta si no existe para almacenar el archivo
+        if not os.path.exists("marathons"):
+            os.makedirs("marathons")
+
+        json_data = dict(nuevo_maraton._mapping)
+        json_data["uploaded_at"] = datetime.now().isoformat() 
+
+        file_name = f"marathons/{m.Race}_{m.Year}_{m.Name}.json"
+        
+        # Guarda el JSON en el archivo local
+        with open(file_name, "w") as json_file:
+            json.dump(json_data, json_file, indent=4)
+
         return {
-            "new_marathon": dict(nuevo_maraton._mapping),
-            "added_records": count_after - count_before,  # Siempre será 1, pero es más claro
+            "new_marathon": json_data,
+            "added_records": count_after - count_before,
             "total_records": count_after
         }
-    except Exception as e:
+    except SQLAlchemyError as e:
+        session.rollback()
         print(f"Error al insertar en la base de datos: {e}")
-        return None
+        return {"error": "Database insertion error"}, 500
+    except Exception as e:
+        print(f"Error al guardar JSON: {e}")
+        return {"error": "Error generating JSON file"}, 500
     finally:
         session.close()
-        
